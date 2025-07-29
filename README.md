@@ -4,20 +4,20 @@
 
 **The data is politicians speaking to eachother about matters of concern of the Irish government.**
 
-Dáil (House of Representatives)
+**Dáil (House of Representatives)**
 
 - 174 TDs, Lower house, elected by public, most power.
 
-Seanad (Senate)
+**Seanad (Senate)**
 
 - Upper house.
 - Can debate, amend but not stop Dáil legislation.
 - The 60 members are chosen by panels of industry specific politicians (43), the Taoiseach (11) and university graduates (6).
 
-Committee
+**Committee**
 - Task groups of TDs and senators focused on specific topics (e.g. healthcare).
 
-PQs
+**PQs (Parliamentary Questions)**
 
 - Questions submitted and directed to specific people for answers.
 - Oral/Written but majority are written.
