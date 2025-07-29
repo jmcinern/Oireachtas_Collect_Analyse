@@ -1,7 +1,5 @@
 # Data Collection
 
-**Collecting**
-
 ## Overview
 
 **The data is politicians speaking to eachother about matters of concern of the Irish government.**
