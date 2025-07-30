@@ -167,7 +167,7 @@ def daterange_monthly(start_str: str, end_str: str):
         curr = chunk_end + timedelta(days=1)
 
 if __name__ == "__main__":
-    DATE_START = "1919-01-01"
+    DATE_START = "2025-07-01"
     DATE_END = "2025-07-31"
 
     all_dail_files = []
