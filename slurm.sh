@@ -21,5 +21,7 @@ pip instrall --no-cache-dir -r "requirements.txt"
 # Navigate to project directory
 cd $SLURM_SUBMIT_DIR
 
+export HF_TOKEN=""
+
 # Update synthesis.py to use 30,000 placenames
 python Collect.py
