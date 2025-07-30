@@ -2,7 +2,7 @@
 #SBATCH --job-name=oireachtas_XML_collect
 #SBATCH --output=./out/oireachtas_XML_collect%j.out
 #SBATCH --error=./err/oireachtas_XML_collect_%j.err
-#SBATCH --time=00:15:00
+#SBATCH --time=12:00:00
 #SBATCH --partition=k2-lowpri  # Changed from k2-gpu-v100
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=128
