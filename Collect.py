@@ -267,4 +267,6 @@ if __name__ == "__main__":
     )
     daterange = f"{DATE_START}_to_{DATE_END}"
     repo_id = "jmcinern/Oireachtas_XML"
-    push_xml_to_hub("all_debates.xml", repo_id, daterange)
+    api = HfApi()
+    api.create_repo(repo_id=repo_id, repo_type="dataset", exist_ok=True)
+    push_xml_to_hub("all_debates.xml", repo_id, daterange) 
