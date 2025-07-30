@@ -7,6 +7,8 @@ from typing import Callable, Dict, List, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from huggingface_hub import HfApi
+from huggingface_hub import login
+
 
 
 LIMIT = 50
@@ -182,6 +184,7 @@ def push_xml_to_hub(xml_path, repo_id, daterange):
 if __name__ == "__main__":
     DATE_START = "2025-01-01"
     DATE_END = "2025-07-31"
+    login(token=os.environ["HF_TOKEN"])
 
     all_dail_files = []
     for s, e in daterange_monthly(DATE_START, DATE_END):
@@ -263,5 +266,5 @@ if __name__ == "__main__":
         Path("all_debates.xml")
     )
     daterange = f"{DATE_START}_to_{DATE_END}"
-    repo_id = "your-username/Oireachtas_XML"
+    repo_id = "jmcinern/Oireachtas_XML"
     push_xml_to_hub("all_debates.xml", repo_id, daterange)
