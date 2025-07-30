@@ -16,6 +16,8 @@ module load python3/3.10.5/gcc-9.3.0
 # Activate your environment
 source /mnt/scratch2/users/40460549/cpt-dail/myenv_new/bin/activate
 
+pip instrall --no-cache-dir -r "requirements.txt"
+
 # Navigate to project directory
 cd $SLURM_SUBMIT_DIR
 

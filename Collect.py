@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+from huggingface_hub import HfApi
+
 
 LIMIT = 50
 MAX_WORKERS = os.cpu_count() or 4
@@ -166,6 +168,17 @@ def daterange_monthly(start_str: str, end_str: str):
         yield curr.isoformat(), chunk_end.isoformat()
         curr = chunk_end + timedelta(days=1)
 
+def push_xml_to_hub(xml_path, repo_id, daterange):
+    api = HfApi()
+    filename = f"Oireachtas_XML_{daterange}.xml"
+    # Upload the file to the root of the repo
+    api.upload_file(
+        path_or_fileobj=xml_path,
+        path_in_repo=filename,
+        repo_id=repo_id,
+        repo_type="dataset"
+    )
+    print(f"Pushed {filename} to {repo_id} on Hugging Face Hub.")
 if __name__ == "__main__":
     DATE_START = "2025-01-01"
     DATE_END = "2025-07-31"
@@ -249,3 +262,6 @@ if __name__ == "__main__":
         all_question_files,
         Path("all_debates.xml")
     )
+    daterange = f"{DATE_START}_to_{DATE_END}"
+    repo_id = "your-username/Oireachtas_XML"
+    push_xml_to_hub("all_debates.xml", repo_id, daterange)
