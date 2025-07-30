@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=fasttext
-#SBATCH --output=./out/fasttext%j.out
-#SBATCH --error=./err/fasttext_%j.err
+#SBATCH --job-name=oireachtas_XML_collect
+#SBATCH --output=./out/oireachtas_XML_collect%j.out
+#SBATCH --error=./err/oireachtas_XML_collect_%j.err
 #SBATCH --time=00:05:00
 #SBATCH --partition=k2-lowpri  # Changed from k2-gpu-v100
 #SBATCH --ntasks=1
