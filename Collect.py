@@ -6,9 +6,7 @@ from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-from huggingface_hub import HfApi
-from huggingface_hub import login
-
+from huggingface_hub import HfApi, login
 
 
 LIMIT = 50
@@ -182,8 +180,8 @@ def push_xml_to_hub(xml_path, repo_id, daterange):
     )
     print(f"Pushed {filename} to {repo_id} on Hugging Face Hub.")
 if __name__ == "__main__":
-    DATE_START = "2025-01-01"
-    DATE_END = "2025-07-31"
+    DATE_START = "1919-01-01"
+    DATE_END = "1950-12-31"
     login(token=os.environ["HF_TOKEN"])
 
     all_dail_files = []
