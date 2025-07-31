@@ -3,7 +3,7 @@
 #SBATCH --output=./out/oireachtas_XML_collect%j.out
 #SBATCH --error=./err/oireachtas_XML_collect_%j.err
 #SBATCH --time=2:00:00
-#SBATCH --partition=k2-lowpri  # Changed from k2-gpu-v100
+#SBATCH --partition=k2-medpri  # Changed from k2-gpu-v100
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=16G  # Reduced from 256G
