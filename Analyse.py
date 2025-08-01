@@ -30,6 +30,11 @@ tqdm.pandas(desc="Detecting language")
 df['lang'] = df['text'].progress_apply(detect_language)
 
 # Calculate proportions by year and source_type
+df['date'] = pd.to_datetime(df['date'], errors='coerce')
+df['year'] = df['date'].dt.year
+df = df[df['year'].notnull()]  # Drop rows with missing year
+
+# Now proceed as before
 counts = df.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
 totals = counts.sum(axis=1)
 prop_ga = (counts.get('ga', 0) / totals).unstack(fill_value=0)
