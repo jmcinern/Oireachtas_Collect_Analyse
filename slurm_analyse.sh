@@ -16,4 +16,6 @@ source /mnt/scratch2/users/40460549/cpt-dail/myenv_new/bin/activate
 
 cd $SLURM_SUBMIT_DIR
 
+pip install pandas tqdm fasttext --no-cache-dir
+
 python Analyse.py

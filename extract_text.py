@@ -162,8 +162,8 @@ def parse_file(path):
 
 def main():
     # HuggingFace raw file URL
-    hf_url = "https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_2020-01-01_to_2025-01-01.xml"
-    cache_path = "Oireachtas_XML_2020-01-01_to_2025-01-01.xml"
+    hf_url = "https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_1919-01-01_to_2025-07-31.xml"
+    cache_path = "Oireachtas_XML_1919-01-01_to_2025-07-31.xml"
     download_from_hf(hf_url, cache_path)
     all_rows=[]
     for row in parse_file(cache_path):

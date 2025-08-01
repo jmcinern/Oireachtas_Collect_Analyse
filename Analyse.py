@@ -6,7 +6,6 @@ import os
 # Load data
 df = pd.read_csv("debates_all.csv")
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
-df['month'] = df['date'].dt.to_period('M')
 df['year'] = df['date'].dt.year
 
 # Load fastText language identification model
@@ -30,16 +29,30 @@ def detect_language(text):
 tqdm.pandas(desc="Detecting language")
 df['lang'] = df['text'].progress_apply(detect_language)
 
-# Proportion of Irish to English by month and source_type
-lang_counts = df.groupby(['month', 'source_type', 'lang']).size().unstack(fill_value=0)
-lang_counts['total'] = lang_counts.sum(axis=1)
-lang_counts['prop_irish'] = lang_counts.get('ga', 0) / lang_counts['total']
-lang_counts['prop_english'] = lang_counts.get('en', 0) / lang_counts['total']
+# Calculate proportions by year and source_type
+counts = df.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
+totals = counts.sum(axis=1)
+prop_ga = (counts.get('ga', 0) / totals).unstack(fill_value=0)
+prop_en = (counts.get('en', 0) / totals).unstack(fill_value=0)
+prop_other = (totals - counts.get('ga', 0) - counts.get('en', 0)) / totals
+prop_other = prop_other.unstack(fill_value=0)
 
-print(lang_counts[['prop_irish', 'prop_english']])
+# Save to CSVs
+prop_ga.to_csv("prop_ga.csv")
+prop_en.to_csv("prop_en.csv")
+prop_other.to_csv("prop_other.csv")
 
-# Save Irish text examples
-irish_examples = df[df['lang'] == 'ga']['text'].dropna().unique()
-with open("irish_text_examples.txt", "w", encoding="utf-8") as f:
-    for example in irish_examples:
+# Save examples for each language group
+def save_examples(lang_code, filename, n=20):
+    examples = df[df['lang'] == lang_code]['text'].dropna().unique()[:n]
+    with open(filename, "w", encoding="utf-8") as f:
+        for example in examples:
+            f.write(example.strip() + "\n")
+
+save_examples('ga', "irish_text_examples.txt")
+save_examples('en', "english_text_examples.txt")
+# For 'other', get examples not ga or en
+other_examples = df[~df['lang'].isin(['ga', 'en'])]['text'].dropna().unique()[:20]
+with open("other_text_examples.txt", "w", encoding="utf-8") as f:
+    for example in other_examples:
         f.write(example.strip() + "\n")
