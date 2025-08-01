@@ -173,7 +173,7 @@ def stream_and_write(path, csv_path):
                 while debate.getprevious() is not None:
                     del debate.getparent()[0]
             except Exception as e:
-                print(f"Error parsing debate: {e}")
+                #print(f"Error parsing debate: {e}")
                 continue
 
 def main():
