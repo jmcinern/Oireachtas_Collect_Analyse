@@ -2,16 +2,27 @@ from lxml import etree
 import csv
 from itertools import zip_longest
 import os
+from tqdm import tqdm
+import requests
 
 def download_from_hf(hf_url, cache_path):
-    """Download file from HuggingFace if not present in cache."""
+    """Download file from HuggingFace if not present in cache, with progress bar."""
     if not os.path.exists(cache_path):
         print(f"Downloading {hf_url} to {cache_path} ...")
-        import requests
-        response = requests.get(hf_url)
+        response = requests.get(hf_url, stream=True)
         response.raise_for_status()
-        with open(cache_path, "wb") as f:
-            f.write(response.content)
+        total = int(response.headers.get('content-length', 0))
+        with open(cache_path, "wb") as f, tqdm(
+            desc=cache_path,
+            total=total,
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as bar:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    bar.update(len(chunk))
         print("Download complete.")
     else:
         print(f"Using cached file: {cache_path}")
