@@ -180,8 +180,8 @@ def push_xml_to_hub(xml_path, repo_id, daterange):
     )
     print(f"Pushed {filename} to {repo_id} on Hugging Face Hub.")
 if __name__ == "__main__":
-    DATE_START = "1919-01-01"
-    DATE_END = "1950-12-31"
+    DATE_START = "1960-01-01"
+    DATE_END = "1969-12-31"
     login(token=os.environ["HF_TOKEN"])
 
     all_dail_files = []
