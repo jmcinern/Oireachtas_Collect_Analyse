@@ -1,6 +1,9 @@
 from lxml import etree
 from itertools import islice
 
+
+NS_AKN = {'akn': 'http://docs.oasis-open.org/legaldocml/ns/akn/3.0/CSD13'}
+
 def extract_debate_rows(debate):
     """Given one <debate> element, return a list of flat dict rows."""
     rows = []
