@@ -6,6 +6,10 @@ import os
 # Load data
 print("Loading data...")
 df = pd.read_csv("debates_all.csv", nrows=1000)
+print(" COLS AND DATES ")
+print(df.columns)
+print(df['date'].head(10))
+
 print("First few rows of loaded data:")
 print(df.head())
 print("Columns:", df.columns)
