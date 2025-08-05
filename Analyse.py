@@ -5,7 +5,8 @@ import os
 
 # Load data
 print("Loading data...")
-df = pd.read_csv("debates_all.csv", nrows=1000)
+df = pd.read_csv("debates_all.csv")
+df = df.tail(1000)  # just get last 1000 rows for testing
 print(" COLS AND DATES ")
 print(df.columns)
 
