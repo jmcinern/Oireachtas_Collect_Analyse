@@ -8,6 +8,9 @@ print("Loading data...")
 df = pd.read_csv("debates_all.csv", nrows=1000)
 print(" COLS AND DATES ")
 print(df.columns)
+
+# get number of NANs in df['date']
+print("Number of NaNs in 'date' column:", df['date'].isna().sum())
 print(df['date'].head(100))
 
 print("First few rows of loaded data:")
