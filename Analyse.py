@@ -87,3 +87,4 @@ other_examples = df[~df['lang'].isin(['ga', 'en'])]['text'].dropna().unique()[:2
 print(f"Saving {len(other_examples)} examples for other to other_text_examples.txt")
 with open("other_text_examples.txt", "w", encoding="utf-8") as f:
     for example in other_examples:
+        f.write(example.strip() + "\n")
