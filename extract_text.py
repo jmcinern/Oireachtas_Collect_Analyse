@@ -177,12 +177,13 @@ def stream_and_write(path, csv_path):
                 continue
 
 def main():
-    hf_url = "https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_1919-01-01_to_2025-07-31.xml"
-    cache_path = "Oireachtas_XML_1919-01-01_to_2025-07-31.xml"
+    # Oireachtas_XML_2020-01-01_to_2025-01-01.xml
+    hf_url = "https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_2020-01-01_to_2025-01-01.xml"
+    cache_path = "Oireachtas_XML_2020-01-01_to_2025-01-01.xml"
     download_from_hf(hf_url, cache_path)
-    csv_path = "debates_all.csv"
+    csv_path = "debates_all_2020_2025.csv"
     stream_and_write(cache_path, csv_path)
-    print("Done. Output written to debates_all.csv")
+    print("Done. Output written to debates_all_2020_2025.csv")
 
 if __name__=='__main__':
     print("Parsing Oireachtas XML file... (streaming, low RAM mode)")
