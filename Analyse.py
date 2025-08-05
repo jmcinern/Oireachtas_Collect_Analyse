@@ -5,6 +5,8 @@ import os
 
 # Load data
 df = pd.read_csv("debates_all.csv")
+# just get first 1000 rows
+df = df.head(1000)
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df['year'] = df['date'].dt.year
 
@@ -34,13 +36,22 @@ df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df['year'] = df['date'].dt.year
 df = df[df['year'].notnull()]  # Drop rows with missing year
 
-# Now proceed as before
+# Calculate proportions by year and source_type
 counts = df.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
 totals = counts.sum(axis=1)
-prop_ga = (counts.get('ga', 0) / totals).unstack(fill_value=0)
-prop_en = (counts.get('en', 0) / totals).unstack(fill_value=0)
+
+print(totals)
+
+# Always include all source_types as columns
+source_types = df['source_type'].unique()
+
+# Proportion for Irish
+prop_ga = (counts.get('ga', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
+# Proportion for English
+prop_en = (counts.get('en', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
+# Proportion for Other
 prop_other = (totals - counts.get('ga', 0) - counts.get('en', 0)) / totals
-prop_other = prop_other.unstack(fill_value=0)
+prop_other = prop_other.unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
 
 # Save to CSVs
 prop_ga.to_csv("prop_ga.csv")
