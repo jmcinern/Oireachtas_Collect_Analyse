@@ -5,10 +5,8 @@ import os
 
 # Load data
 print("Loading data...")
-df = pd.read_csv("debates_all.csv")
-print("Data loaded. Number of rows:", len(df))    
+df = pd.read_csv("debates_all.csv", nrows= 1000)
 # just get first 1000 rows
-df = df.head(1000)
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df['year'] = df['date'].dt.year
 
