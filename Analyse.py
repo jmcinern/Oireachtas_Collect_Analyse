@@ -4,7 +4,9 @@ from tqdm import tqdm
 import os
 
 # Load data
+print("Loading data...")
 df = pd.read_csv("debates_all.csv")
+print("Data loaded. Number of rows:", len(df))    
 # just get first 1000 rows
 df = df.head(1000)
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
