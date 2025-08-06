@@ -30,7 +30,7 @@ all_counts = []
 all_examples = {'ga': [], 'en': [], 'other': []}
 
 print("Processing CSV in chunks...")
-reader = pd.read_csv(csv_path, chunksize=chunksize, nrows=1000000)
+reader = pd.read_csv(csv_path, chunksize=chunksize, nrows=300000)
 
 for i, chunk in enumerate(reader):
     chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
