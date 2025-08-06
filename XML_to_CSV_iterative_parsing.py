@@ -34,7 +34,7 @@ def parse_file(path):
             'heading_time':'','attendance':''
         }
 
-        # --- locate akn without chaining or/---
+        # locate akn without chaining or/
         akn = debate.find('.//akn:akomaNtoso', namespaces=NS)
         if akn is None:
             akn = debate.find('.//akn:data/akn:akomaNtoso', namespaces=NS)
@@ -67,9 +67,62 @@ def parse_file(path):
             base['volume'] = (vol.text or '').strip() if vol is not None else ''
             base['number'] = (num.text or '').strip() if num is not None else ''
 
-        # … your attendance and sections/speech loops unchanged …
+        # attendance (always)
+        rolls = akn.xpath('.//akn:rollCall', namespaces=NS) if akn is not None else []
+        if rolls:
+            hdr = rolls[0].xpath('./akn:summary[1]/text()', namespaces=NS)
+            header = hdr[0].strip() if hdr else ''
+            for p in rolls[0].xpath('.//akn:table//akn:person', namespaces=NS):
+                row = base.copy()
+                row.update({
+                    'element_type':'attendance','text':header,
+                    'attendance':(p.text or '').strip(),
+                    'speaker_id':p.get('refersTo','').lstrip('#'),
+                    'speaker_name':(p.text or '').strip()
+                })
+                yield row
 
-        # questions & answers
+        # sections: summaries, speeches (always)
+        for sec in debate.findall('.//{*}debateSection'):
+            sec_name, sec_id = sec.get('name',''), sec.get('eId','')
+            hd = sec.find('{*}heading')
+            heading_text = (hd.text or '').strip() if hd is not None else ''
+            rt = hd.find('{*}recordedTime') if hd is not None else None
+            heading_time = rt.get('time','') if rt is not None else ''
+
+            # summaries
+            for summ in sec.findall('{*}summary'):
+                row = base.copy()
+                row.update({
+                    'section_name':sec_name,'section_id':sec_id,
+                    'element_type':'summary','element_id':summ.get('eId',''),
+                    'text':(summ.text or '').strip(),
+                    'heading_text':heading_text,'heading_time':heading_time
+                })
+                yield row
+
+            # speeches
+            for spk in sec.findall('{*}speech'):
+                spk_id, spkr_id = spk.get('eId',''), spk.get('by','')
+                role = spk.get('as','')
+                fr = spk.find('{*}from')
+                name = (fr.text or '').strip() if fr is not None else ''
+                rt = fr.find('{*}recordedTime') if fr is not None else None
+                rec_time = rt.get('time','') if rt is not None else ''
+                for p in spk.findall('{*}p'):
+                    txt = ''.join(p.itertext()).strip()
+                    row = base.copy()
+                    row.update({
+                        'section_name':sec_name,'section_id':sec_id,
+                        'element_type':'speech','element_id':spk_id,
+                        'speaker_id':spkr_id,'speaker_name':name,
+                        'speaker_role':role,'recorded_time':rec_time,
+                        'text':txt,'heading_text':heading_text,
+                        'heading_time':heading_time
+                    })
+                    yield row
+
+        # questions & answers (only for type='questions')
         if debate.get('type','') == 'questions' and akn is not None:
             akn_ns = akn.nsmap.get(None)
             ns = {'ns':akn_ns} if akn_ns else {}
@@ -77,7 +130,6 @@ def parse_file(path):
             ans = akn.xpath('.//ns:speech',   namespaces=ns)
 
             for q_elem, a_elem in zip_longest(qs, ans, fillvalue=None):
-                # explicit None checks instead of (q_elem or [])
                 if q_elem is not None:
                     q_text = ' '.join(
                         ''.join(p.itertext()).strip()
@@ -109,12 +161,12 @@ def parse_file(path):
         debate.clear()
         while debate.getprevious() is not None:
             del debate.getparent()[0]
-
     del ctx
 
 
+
 def main():
-    date_range = "1919-01-01_to_2025-07-31"
+    date_range = "2025-01-01_to_2025-07-31"
     hf_url = f"https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_{date_range}.xml"
     cache_path = f"Oireachtas_XML_{date_range}.xml"
     download_from_hf(hf_url, cache_path)
