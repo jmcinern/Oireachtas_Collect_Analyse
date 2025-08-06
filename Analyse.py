@@ -8,8 +8,7 @@ print("Loading data...")
 df = pd.read_csv("debates_all_1919-01-01_to_2025-07-31.csv")
 print(" COLS AND DATES ")
 print(df.columns)
-print(f'Source types: {df['source_type'].unique()}')
-
+print(df['source_type'].unique())
 # get number of NANs in df['date']
 print("Number of NaNs in 'date' column:", df['date'].isna().sum())
 print(df['date'].head(100))
