@@ -63,15 +63,18 @@ props = counts_full.div(counts_full.sum(axis=1), axis=0)
 # Save proportions for 'ga' and 'en'
 for lang in ['ga', 'en']:
     if lang in props.columns:
-        df_lang = props[lang].unstack().reset_index()
+        df_lang = props[lang].unstack(fill_value=0)
+        df_lang.index.name = 'year'
+        df_lang.reset_index(inplace=True)
         df_lang.to_csv(f"prop_{lang}.csv", index=False)
     else:
         print(f"Warning: No data for language '{lang}'")
 
-# For "other", compute 1 - ga - en per cell
 if 'ga' in props.columns and 'en' in props.columns:
     other_props = 1 - props['ga'] - props['en']
-    other_df = other_props.unstack().reset_index()
+    other_df = other_props.unstack(fill_value=0)
+    other_df.index.name = 'year'
+    other_df.reset_index(inplace=True)
     other_df.to_csv("prop_other.csv", index=False)
 else:
     print("Warning: 'ga' or 'en' columns missing, cannot compute 'other' proportions.")
