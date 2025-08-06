@@ -114,7 +114,7 @@ def parse_file(path):
 
 
 def main():
-    date_range = "2020-01-01_to_2025-01-01"
+    date_range = "1919-01-01_to_2025-07-31"
     hf_url = f"https://huggingface.co/datasets/jmcinern/Oireachtas_XML/resolve/main/Oireachtas_XML_{date_range}.xml"
     cache_path = f"Oireachtas_XML_{date_range}.xml"
     download_from_hf(hf_url, cache_path)
