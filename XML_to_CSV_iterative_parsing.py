@@ -21,7 +21,7 @@ def parse_file(path):
     NS = {'akn':'http://docs.oasis-open.org/legaldocml/ns/akn/3.0/CSD13'}
     ctx = etree.iterparse(path, events=('end',), tag='debate')
 
-    for _, debate in ctx:
+    for _, debate in tqdm(ctx):
         base = {
             'doc_id':'','source_type':debate.get('type',''),'date':debate.get('date',''),
             'title_ga':'','title_en':'','proponent_ga':'','proponent_en':'',
