@@ -3,25 +3,6 @@ import fasttext
 from tqdm import tqdm
 import os
 
-# Load data
-print("Loading data...")
-df = pd.read_csv("debates_all_1919-01-01_to_2025-07-31.csv")
-print(" COLS AND DATES ")
-print(df.columns)
-print(df['source_type'].unique())
-# get number of NANs in df['date']
-print("Number of NaNs in 'date' column:", df['date'].isna().sum())
-print(df['date'].head(100))
-
-print("First few rows of loaded data:")
-print(df.head())
-print("Columns:", df.columns)
-
-# just get first 1000 rows
-df['date'] = pd.to_datetime(df['date'], errors='coerce')
-df['year'] = df['date'].dt.year
-print("Unique years after date parsing:", df['year'].unique())
-
 # Load fastText language identification model
 FASTTEXT_MODEL_PATH = "lid.176.bin"
 if not os.path.exists(FASTTEXT_MODEL_PATH):
@@ -40,36 +21,60 @@ def detect_language(text):
     lang = prediction[0][0].replace("__label__", "")
     return lang
 
-# Detect language for each text
-print("Detecting language for each text...")
-tqdm.pandas(desc="Detecting language")
-df['lang'] = df['text'].progress_apply(detect_language)
-print("Unique detected languages:", df['lang'].unique())
-print("Language counts:\n", df['lang'].value_counts())
+# Parameters
+csv_path = "debates_all_1919-01-01_to_2025-07-31.csv"
+chunksize = 100000  # adjust as needed
 
-# Calculate proportions by year and source_type
-df = df[df['year'].notnull()]  # Drop rows with missing year
-print("Rows after dropping missing years:", len(df))
-print("Unique source_types:", df['source_type'].unique())
+# Aggregation containers
+all_counts = []
+all_examples = {'ga': [], 'en': [], 'other': []}
 
-# Calculate proportions by year and source_type
-counts = df.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
-print("Counts table head:\n", counts.head())
-totals = counts.sum(axis=1)
-print("Totals head:\n", totals.head())
+print("Processing CSV in chunks...")
+reader = pd.read_csv(csv_path, chunksize=chunksize)
 
-# Always include all source_types as columns
-source_types = df['source_type'].unique()
-print("Source types for reindexing:", source_types)
+for i, chunk in enumerate(reader):
+    print(f"\n--- Processing chunk {i+1} ---")
+    chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
+    chunk['year'] = chunk['date'].dt.year
+    chunk = chunk[chunk['year'].notnull()]
+    print("Rows after dropping missing years:", len(chunk))
+
+    tqdm.pandas(desc=f"Detecting language (chunk {i+1})")
+    chunk['lang'] = chunk['text'].progress_apply(detect_language)
+    print("Unique detected languages:", chunk['lang'].unique())
+    print("Language counts:\n", chunk['lang'].value_counts())
+
+    # Save examples for each language group (up to 20 per chunk)
+    for lang_code in ['ga', 'en']:
+        examples = chunk[chunk['lang'] == lang_code]['text'].dropna().unique()
+        all_examples[lang_code].extend(examples[:20])
+    other_examples = chunk[~chunk['lang'].isin(['ga', 'en'])]['text'].dropna().unique()
+    all_examples['other'].extend(other_examples[:20])
+
+    # Group and aggregate
+    counts = chunk.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
+    all_counts.append(counts)
+
+# Concatenate all chunk results
+print("\nConcatenating chunk results...")
+if all_counts:
+    counts_full = pd.concat(all_counts)
+    counts_full = counts_full.groupby(['year', 'source_type']).sum()
+    counts_full = counts_full.unstack(fill_value=0)
+else:
+    counts_full = pd.DataFrame()
+
+totals = counts_full.sum(axis=1)
+source_types = counts_full.index.get_level_values('source_type').unique()
 
 # Proportion for Irish
-prop_ga = (counts.get('ga', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
+prop_ga = (counts_full.get('ga', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
 print("prop_ga head:\n", prop_ga.head())
 # Proportion for English
-prop_en = (counts.get('en', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
+prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
 print("prop_en head:\n", prop_en.head())
 # Proportion for Other
-prop_other = (totals - counts.get('ga', 0) - counts.get('en', 0)) / totals
+prop_other = (totals - counts_full.get('ga', 0) - counts_full.get('en', 0)) / totals
 prop_other = prop_other.unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
 print("prop_other head:\n", prop_other.head())
 
@@ -79,19 +84,14 @@ prop_ga.to_csv("prop_ga.csv")
 prop_en.to_csv("prop_en.csv")
 prop_other.to_csv("prop_other.csv")
 
-# Save examples for each language group
+# Save examples for each language group (deduplicated, up to 20 total)
 def save_examples(lang_code, filename, n=20):
-    examples = df[df['lang'] == lang_code]['text'].dropna().unique()[:n]
+    examples = pd.Series(all_examples[lang_code]).drop_duplicates().head(n)
     print(f"Saving {len(examples)} examples for {lang_code} to {filename}")
     with open(filename, "w", encoding="utf-8") as f:
         for example in examples:
-            f.write(example.strip() + "\n")
+            f.write(str(example).strip() + "\n")
 
 save_examples('ga', "irish_text_examples.txt")
 save_examples('en', "english_text_examples.txt")
-# For 'other', get examples not ga or en
-other_examples = df[~df['lang'].isin(['ga', 'en'])]['text'].dropna().unique()[:20]
-print(f"Saving {len(other_examples)} examples for other to other_text_examples.txt")
-with open("other_text_examples.txt", "w", encoding="utf-8") as f:
-    for example in other_examples:
-        f.write(example.strip() + "\n")
+save_examples('other',
