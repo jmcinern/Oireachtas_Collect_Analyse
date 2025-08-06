@@ -69,12 +69,6 @@ prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0)
 prop_other = (totals - counts_full.get('ga', 0) - counts_full.get('en', 0)) / totals
 prop_other = prop_other.unstack(fill_value=0)
 
-# Optionally, ensure all columns are present (only if prop_ga is a DataFrame)
-if hasattr(prop_ga, 'reindex'):
-    prop_ga = prop_ga.reindex(columns=source_types, fill_value=0)
-    prop_en = prop_en.reindex(columns=source_types, fill_value=0)
-    prop_other = prop_other.reindex(columns=source_types, fill_value=0)
-
 # Save to CSVs
 print("Saving prop_ga.csv, prop_en.csv, prop_other.csv ...")
 prop_ga.to_csv("prop_ga.csv")
