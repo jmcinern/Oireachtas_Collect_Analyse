@@ -30,7 +30,7 @@ all_counts = []
 all_examples = {'ga': [], 'en': [], 'other': []}
 
 print("Processing CSV in chunks...")
-reader = pd.read_csv(csv_path, chunksize=chunksize)
+reader = pd.read_csv(csv_path, chunksize=chunksize, nrows=1000000)
 
 for i, chunk in enumerate(reader):
     chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
@@ -62,13 +62,18 @@ else:
 
 totals = counts_full.sum(axis=1)
 source_types = counts_full.columns
+
 # Proportion for Irish
-prop_ga = (counts_full.get('ga', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
-# Proportion for English
-prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
-# Proportion for Other
+prop_ga = (counts_full.get('ga', 0) / totals).unstack(fill_value=0)
+prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0)
 prop_other = (totals - counts_full.get('ga', 0) - counts_full.get('en', 0)) / totals
-prop_other = prop_other.unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
+prop_other = prop_other.unstack(fill_value=0)
+
+# Optionally, ensure all columns are present (only if prop_ga is a DataFrame)
+if hasattr(prop_ga, 'reindex'):
+    prop_ga = prop_ga.reindex(columns=source_types, fill_value=0)
+    prop_en = prop_en.reindex(columns=source_types, fill_value=0)
+    prop_other = prop_other.reindex(columns=source_types, fill_value=0)
 
 # Save to CSVs
 print("Saving prop_ga.csv, prop_en.csv, prop_other.csv ...")
