@@ -42,9 +42,9 @@ for i, chunk in enumerate(reader, start=1):
 
     # Collect example texts
     for lc in ['ga', 'en']:
-        samples = chunk.loc[chunk['lang']==lc, 'text'].dropna().unique()
+        samples = chunk.loc[chunk['lang'] == lc, 'text'].dropna().unique()
         all_examples[lc].extend(samples[:20])
-    others = chunk.loc[~chunk['lang'].isin(['ga','en']), 'text'].dropna().unique()
+    others = chunk.loc[~chunk['lang'].isin(['ga', 'en']), 'text'].dropna().unique()
     all_examples['other'].extend(others[:20])
 
     # Count by year, source_type, lang
@@ -54,7 +54,7 @@ for i, chunk in enumerate(reader, start=1):
 
 # Combine all counts
 print("Concatenating counts...")
-counts_full = pd.concat(all_counts).groupby(level=['year','source_type']).sum()
+counts_full = pd.concat(all_counts).groupby(level=['year', 'source_type']).sum()
 print("counts_full columns:", counts_full.columns)
 
 # Compute proportions per row
@@ -62,20 +62,21 @@ props = counts_full.div(counts_full.sum(axis=1), axis=0)
 
 # Save proportions for 'ga' and 'en'
 for lang in ['ga', 'en']:
-    df_lang = (
-        props.xs(lang, axis=1, level='lang')
-             .unstack(level='source_type')
-             .reset_index()
-    )
-    df_lang.to_csv(f"prop_{lang}.csv", index=False)
+    if lang in props.columns:
+        df_lang = props[lang].unstack().reset_index()
+        df_lang.to_csv(f"prop_{lang}.csv", index=False)
+    else:
+        print(f"Warning: No data for language '{lang}'")
 
 # For "other", compute 1 - ga - en per cell
-other_props = 1 - props.xs('ga', axis=1, level='lang') - props.xs('en', axis=1, level='lang')
-other_df = other_props.unstack(level='source_type').reset_index()
-other_df.to_csv("prop_other.csv", index=False)
+if 'ga' in props.columns and 'en' in props.columns:
+    other_props = 1 - props['ga'] - props['en']
+    other_df = other_props.unstack().reset_index()
+    other_df.to_csv("prop_other.csv", index=False)
+else:
+    print("Warning: 'ga' or 'en' columns missing, cannot compute 'other' proportions.")
 
 # Save examples
-
 def save_examples(lang_code, fname, n=20):
     unique_ex = pd.Series(all_examples[lang_code]).drop_duplicates().head(n)
     print(f"Saving {len(unique_ex)} examples for {lang_code} to {fname}")
@@ -85,4 +86,3 @@ def save_examples(lang_code, fname, n=20):
 
 save_examples('ga', 'irish_text_examples.txt')
 save_examples('en', 'english_text_examples.txt')
-save_examples('other', 'other_text_examples.txt')
