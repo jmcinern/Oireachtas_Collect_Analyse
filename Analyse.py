@@ -33,16 +33,12 @@ print("Processing CSV in chunks...")
 reader = pd.read_csv(csv_path, chunksize=chunksize)
 
 for i, chunk in enumerate(reader):
-    print(f"\n--- Processing chunk {i+1} ---")
     chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
     chunk['year'] = chunk['date'].dt.year
     chunk = chunk[chunk['year'].notnull()]
-    print("Rows after dropping missing years:", len(chunk))
 
     tqdm.pandas(desc=f"Detecting language (chunk {i+1})")
     chunk['lang'] = chunk['text'].progress_apply(detect_language)
-    print("Unique detected languages:", chunk['lang'].unique())
-    print("Language counts:\n", chunk['lang'].value_counts())
 
     # Save examples for each language group (up to 20 per chunk)
     for lang_code in ['ga', 'en']:
@@ -65,18 +61,14 @@ else:
     counts_full = pd.DataFrame()
 
 totals = counts_full.sum(axis=1)
-source_types = counts_full.index.get_level_values('source_type').unique()
-
+source_types = counts_full.columns
 # Proportion for Irish
 prop_ga = (counts_full.get('ga', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
-print("prop_ga head:\n", prop_ga.head())
 # Proportion for English
 prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
-print("prop_en head:\n", prop_en.head())
 # Proportion for Other
 prop_other = (totals - counts_full.get('ga', 0) - counts_full.get('en', 0)) / totals
 prop_other = prop_other.unstack(fill_value=0).reindex(columns=source_types, fill_value=0)
-print("prop_other head:\n", prop_other.head())
 
 # Save to CSVs
 print("Saving prop_ga.csv, prop_en.csv, prop_other.csv ...")
