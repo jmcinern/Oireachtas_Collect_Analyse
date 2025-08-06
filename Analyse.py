@@ -94,4 +94,4 @@ def save_examples(lang_code, filename, n=20):
 
 save_examples('ga', "irish_text_examples.txt")
 save_examples('en', "english_text_examples.txt")
-save_examples('other',
+save_examples('other', "other_text_examples.txt")
