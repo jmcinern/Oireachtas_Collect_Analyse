@@ -14,75 +14,75 @@ if not os.path.exists(FASTTEXT_MODEL_PATH):
 print("Loading fastText model...")
 ft_model = fasttext.load_model(FASTTEXT_MODEL_PATH)
 
+# Language detection helper
 def detect_language(text):
     if not isinstance(text, str) or not text.strip():
         return "unk"
-    prediction = ft_model.predict(text.replace('\n', ' '), k=1)
-    lang = prediction[0][0].replace("__label__", "")
-    return lang
+    label, _ = ft_model.predict(text.replace("\n", " "), k=1)
+    return label[0].replace("__label__", "")
 
 # Parameters
-csv_path = "debates_all_1919-01-01_to_2025-07-31.csv"
-chunksize = 100000  # adjust as needed
+CSV_PATH = "debates_all_1919-01-01_to_2025-07-31.csv"
+CHUNKSIZE = 100_000
+MAX_ROWS = 300_000  # set to an int for testing, or None to read all rows
 
 # Aggregation containers
 all_counts = []
 all_examples = {'ga': [], 'en': [], 'other': []}
 
 print("Processing CSV in chunks...")
-reader = pd.read_csv(csv_path, chunksize=chunksize, nrows=300000)
-
-for i, chunk in enumerate(reader):
+reader = pd.read_csv(CSV_PATH, chunksize=CHUNKSIZE, nrows=MAX_ROWS)
+for i, chunk in enumerate(reader, start=1):
     chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
+    chunk = chunk[chunk['date'].notnull()]
     chunk['year'] = chunk['date'].dt.year
-    chunk = chunk[chunk['year'].notnull()]
 
-    tqdm.pandas(desc=f"Detecting language (chunk {i+1})")
+    tqdm.pandas(desc=f"Detecting language (chunk {i})")
     chunk['lang'] = chunk['text'].progress_apply(detect_language)
 
-    # Save examples for each language group (up to 20 per chunk)
-    for lang_code in ['ga', 'en']:
-        examples = chunk[chunk['lang'] == lang_code]['text'].dropna().unique()
-        all_examples[lang_code].extend(examples[:20])
-    other_examples = chunk[~chunk['lang'].isin(['ga', 'en'])]['text'].dropna().unique()
-    all_examples['other'].extend(other_examples[:20])
+    # Collect example texts
+    for lc in ['ga', 'en']:
+        samples = chunk.loc[chunk['lang']==lc, 'text'].dropna().unique()
+        all_examples[lc].extend(samples[:20])
+    others = chunk.loc[~chunk['lang'].isin(['ga','en']), 'text'].dropna().unique()
+    all_examples['other'].extend(others[:20])
 
-    # Group and aggregate
-    counts = chunk.groupby(['year', 'source_type', 'lang']).size().unstack(fill_value=0)
+    # Count by year, source_type, lang
+    grp = chunk.groupby(['year', 'source_type', 'lang']).size()
+    counts = grp.unstack(fill_value=0)
     all_counts.append(counts)
 
-# Concatenate all chunk results
-print("\nConcatenating chunk results...")
-if all_counts:
-    counts_full = pd.concat(all_counts)
-    counts_full = counts_full.groupby(['year', 'source_type']).sum()
-    counts_full = counts_full.unstack(fill_value=0)
-else:
-    counts_full = pd.DataFrame()
+# Combine all counts
+print("Concatenating counts...")
+counts_full = pd.concat(all_counts).groupby(level=['year','source_type']).sum()
+print("counts_full columns:", counts_full.columns)
 
-totals = counts_full.sum(axis=1)
-source_types = counts_full.columns
+# Compute proportions per row
+props = counts_full.div(counts_full.sum(axis=1), axis=0)
 
-# Proportion for Irish
-prop_ga = (counts_full.get('ga', 0) / totals).unstack(fill_value=0)
-prop_en = (counts_full.get('en', 0) / totals).unstack(fill_value=0)
-prop_other = (totals - counts_full.get('ga', 0) - counts_full.get('en', 0)) / totals
-prop_other = prop_other.unstack(fill_value=0)
+# Save proportions for 'ga' and 'en'
+for lang in ['ga', 'en']:
+    df_lang = (
+        props.xs(lang, axis=1, level='lang')
+             .unstack(level='source_type')
+             .reset_index()
+    )
+    df_lang.to_csv(f"prop_{lang}.csv", index=False)
 
-# Save to CSVs
-print("Saving prop_ga.csv, prop_en.csv, prop_other.csv ...")
-prop_ga.to_csv("prop_ga.csv")
-prop_en.to_csv("prop_en.csv")
-prop_other.to_csv("prop_other.csv")
+# For "other", compute 1 - ga - en per cell
+other_props = 1 - props.xs('ga', axis=1, level='lang') - props.xs('en', axis=1, level='lang')
+other_df = other_props.unstack(level='source_type').reset_index()
+other_df.to_csv("prop_other.csv", index=False)
 
-# Save examples for each language group (deduplicated, up to 20 total)
-def save_examples(lang_code, filename, n=20):
-    examples = pd.Series(all_examples[lang_code]).drop_duplicates().head(n)
-    print(f"Saving {len(examples)} examples for {lang_code} to {filename}")
-    with open(filename, "w", encoding="utf-8") as f:
-        for example in examples:
-            f.write(str(example).strip() + "\n")
+# Save examples
 
-save_examples('ga', "irish_text_examples.txt")
-save_examples('en', "english_text_examples.txt")
-save_examples('other', "other_text_examples.txt")
+def save_examples(lang_code, fname, n=20):
+    unique_ex = pd.Series(all_examples[lang_code]).drop_duplicates().head(n)
+    print(f"Saving {len(unique_ex)} examples for {lang_code} to {fname}")
+    with open(fname, 'w', encoding='utf-8') as f:
+        for line in unique_ex:
+            f.write(line.strip() + "\n")
+
+save_examples('ga', 'irish_text_examples.txt')
+save_examples('en', 'english_text_examples.txt')
+save_examples('other', 'other_text_examples.txt')
