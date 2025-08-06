@@ -6,7 +6,6 @@ import os
 # Load data
 print("Loading data...")
 df = pd.read_csv("debates_all_1919-01-01_to_2025-07-31.csv")
-df = df.tail(1000)  # just get last 1000 rows for testing
 print(" COLS AND DATES ")
 print(df.columns)
 
