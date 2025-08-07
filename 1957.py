@@ -12,4 +12,4 @@ filtered = df[(df["year"] == 1957) & (df["lang"] == "ga")]
 # Save the text column to a file, one entry per line
 filtered["text"].dropna().to_csv(OUTPUT_TXT, index=False, header=False)
 
-print(f"Saved {len(filtered)} rows
+print(f"Saved {len(filtered)} rows to {OUTPUT_TXT}")
