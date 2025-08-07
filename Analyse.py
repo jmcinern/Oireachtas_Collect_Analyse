@@ -24,8 +24,13 @@ def detect_language(text):
 
 # Parameters
 CSV_PATH = "debates_all_1919-01-01_to_2025-07-31.csv"
-CHUNKSIZE = 1_00_000
+OUTPUT_CSV_PATH = "debates_all_with_lang.csv"
+CHUNKSIZE = 100_000
 MAX_ROWS = None  # set to an int for testing, or None to read all rows
+
+# If output already exists, remove it
+if os.path.exists(OUTPUT_CSV_PATH):
+    os.remove(OUTPUT_CSV_PATH)
 
 # Aggregation containers
 all_counts = []
@@ -34,12 +39,19 @@ all_examples = {'ga': [], 'en': [], 'other': []}
 print("Processing CSV in chunks...")
 reader = pd.read_csv(CSV_PATH, chunksize=CHUNKSIZE, nrows=MAX_ROWS)
 for i, chunk in enumerate(reader, start=1):
+    # 1) Detect language on the full chunk
+    tqdm.pandas(desc=f"Detecting language (chunk {i})")
+    chunk['lang'] = chunk['text'].swifter.apply(detect_language)
+
+    # 2) Stream‐write this augmented chunk
+    write_mode = 'w' if i == 1 else 'a'
+    write_header = (i == 1)
+    chunk.to_csv(OUTPUT_CSV_PATH, index=False, mode=write_mode, header=write_header)
+
+    # 3) Existing processing for counts & examples
     chunk['date'] = pd.to_datetime(chunk['date'], errors='coerce')
     chunk = chunk[chunk['date'].notnull()]
     chunk['year'] = chunk['date'].dt.year
-
-    tqdm.pandas(desc=f"Detecting language (chunk {i})")
-    chunk['lang'] = chunk['text'].swifter.apply(detect_language)
 
     # Collect example texts
     for lc in ['ga', 'en']:
@@ -90,3 +102,4 @@ def save_examples(lang_code, fname, n=20):
 
 save_examples('ga', 'irish_text_examples.txt')
 save_examples('en', 'english_text_examples.txt')
+save_examples('other', 'other_text_examples.txt')
