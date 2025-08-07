@@ -24,7 +24,7 @@ def detect_language(text):
 
 # Parameters
 CSV_PATH = "debates_all_1919-01-01_to_2025-07-31.csv"
-CHUNKSIZE = 1_000_000
+CHUNKSIZE = 1_00_000
 MAX_ROWS = None  # set to an int for testing, or None to read all rows
 
 # Aggregation containers
