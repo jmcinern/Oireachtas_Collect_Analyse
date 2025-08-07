@@ -2,6 +2,7 @@ import pandas as pd
 import fasttext
 from tqdm import tqdm
 import os
+import swrifter
 
 # Load fastText language identification model
 FASTTEXT_MODEL_PATH = "lid.176.bin"
@@ -23,8 +24,8 @@ def detect_language(text):
 
 # Parameters
 CSV_PATH = "debates_all_1919-01-01_to_2025-07-31.csv"
-CHUNKSIZE = 100_000
-MAX_ROWS = 300_000  # set to an int for testing, or None to read all rows
+CHUNKSIZE = 1_000_000
+MAX_ROWS = None  # set to an int for testing, or None to read all rows
 
 # Aggregation containers
 all_counts = []
@@ -38,7 +39,7 @@ for i, chunk in enumerate(reader, start=1):
     chunk['year'] = chunk['date'].dt.year
 
     tqdm.pandas(desc=f"Detecting language (chunk {i})")
-    chunk['lang'] = chunk['text'].progress_apply(detect_language)
+    chunk['lang'] = chunk['text'].swifter.apply(detect_language)
 
     # Collect example texts
     for lc in ['ga', 'en']:
