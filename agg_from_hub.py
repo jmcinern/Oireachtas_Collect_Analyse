@@ -37,11 +37,14 @@ with open(aggregate_xml_path, "w", encoding="utf-8") as out:
     for fname in all_slice_files:
         print(f"Processing {fname}...")
         local_fp = hf_hub_download(repo_id=repo_id, filename=fname, repo_type="dataset")
-        xml = Path(local_fp).read_text(encoding="utf-8")
-        inner = strip_outer_wrapper(xml)
-        if inner:
-            out.write(inner)
-            out.write('\n')
+        with open(local_fp, encoding="utf-8") as fin:
+            for line in fin:
+                # Skip XML header and <all_debates> open/close tags
+                if line.strip().startswith('<?xml'):
+                    continue
+                if line.strip() == '<all_debates>' or line.strip() == '</all_debates>':
+                    continue
+                out.write(line)
     out.write('</all_debates>\n')
 
 print(f"Aggregated file written to {aggregate_xml_path}")
