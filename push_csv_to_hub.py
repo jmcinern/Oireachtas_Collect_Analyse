@@ -16,6 +16,6 @@ def push_csv_to_hub(csv_path, repo_id, filename=None):
 if __name__ == "__main__":
     # Authenticate with your HF token (set as env variable)
     login(token=os.environ["HF_TOKEN"])
-    csv_path = "debates_all_1919-01-01_to_2025-07-31.csv"
+    csv_path = "debates_all_with_lang.csv"
     repo_id = "jmcinern/Oireachtas_XML"
     push_csv_to_hub(csv_path, repo_id)
