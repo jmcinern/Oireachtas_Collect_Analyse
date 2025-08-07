@@ -2,7 +2,7 @@ import pandas as pd
 import fasttext
 from tqdm import tqdm
 import os
-import swrifter
+import swifter
 
 # Load fastText language identification model
 FASTTEXT_MODEL_PATH = "lid.176.bin"
